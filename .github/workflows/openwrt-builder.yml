@@ -91,12 +91,8 @@ jobs:
       id: compile
       run: |
         cd openwrt
-        echo -e "$(nproc) thread compile"
-        make -j$(nproc) || make -j1 || make -j1 V=s
+        make image PROFILE=TLWR741-V4 PACKAGES="base-files busybox dnsmasq dropbear firewall fstools fwtool iptables kmod-gpio-button-hotplug kmod-ipt-conntrack kmod-ipt-core kmod-ipt-nat kmod-nf-conntrack kmod-nf-ipt kmod-nf-nat kmod-nf-reject kmod-tun libblobmsg-json libc libgcc libip4tc libjson-c libjson-script liblua liblucihttp liblucihttp-lua liblzo libmbedtls libnl-tiny libpthread libubox libubus libubus-lua libuci libuclient libxtables logd lua mtd netifd openvpn-mbedtls openwrt-keyring opkg procd rpcd swconfig uboot-envtools ubox ubus ubusd uci uclient-fetch uhttpd usign luci-base luci-mod-admin-full luci-theme-bootstrap luci-app-firewall luci-app-openvpn -rpcd-mod-rrdns -luci-app-statistics -ppp -ppp-mod-pppoe -kmod-ppp -kmod-pppoe -kmod-ath9k -wpad-mini -hostapd-common -libiwinfo -libiwinfo-lua -luci-proto-ipv6 -odhcpd-ipv6only -kmod-nf-conntrack6 -libip6tc"
         echo "status=success" >> $GITHUB_OUTPUT
-        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
-        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
-        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
     - name: Check space usage
       if: (!cancelled())
