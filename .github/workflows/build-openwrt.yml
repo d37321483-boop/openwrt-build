@@ -129,6 +129,51 @@ jobs:
         make image PROFILE=TLWR741-V4 PACKAGES="base-files busybox dnsmasq dropbear firewall fstools fwtool iptables kmod-gpio-button-hotplug kmod-ipt-conntrack kmod-ipt-core kmod-ipt-nat kmod-nf-conntrack kmod-nf-ipt kmod-nf-nat kmod-nf-reject kmod-tun libblobmsg-json libc libgcc libip4tc libjson-c libjson-script liblua liblucihttp liblucihttp-lua liblzo libmbedtls libnl-tiny libpthread libubox libubus libubus-lua libuci libuclient libxtables logd lua mtd netifd openvpn-mbedtls openwrt-keyring opkg procd rpcd swconfig uboot-envtools ubox ubus ubusd uci uclient-fetch uhttpd usign luci-base luci-mod-admin-full luci-theme-bootstrap luci-app-firewall luci-app-openvpn -rpcd-mod-rrdns -luci-app-statistics -ppp -ppp-mod-pppoe -kmod-ppp -kmod-pppoe -kmod-ath9k -wpad-mini -hostapd-common -libiwinfo -libiwinfo-lua -luci-proto-ipv6 -odhcpd-ipv6only -kmod-nf-conntrack6 -libip6tc"
         echo "status=success" >> $GITHUB_OUTPUT
 
+name: Build OpenWrt 18.06
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install -y build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip python3
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+
+    - name: Download Image Builder 18.06.9
+      run: |
+        wget https://openwrt.org
+        tar -f openwrt-imagebuilder-18.06.9-ar71xx-generic.Linux-x86_64.tar.xz -x
+        mv openwrt-imagebuilder-18.06.9-ar71xx-generic.Linux-x86_64 openwrt
+
+    - name: Compile the firmware
+      id: compile
+      run: |
+        cd openwrt
+        make image PROFILE=TLWR741 PACKAGES="base-files busybox dnsmasq dropbear firewall fstools fwtool iptables kmod-gpio-button-hotplug kmod-ipt-conntrack kmod-ipt-core kmod-ipt-nat kmod-nf-conntrack kmod-nf-ipt kmod-nf-nat kmod-nf-reject kmod-tun libblobmsg-json libc libgcc libip4tc libjson-c libjson-script liblua liblucihttp liblucihttp-lua liblzo libmbedtls libnl-tiny libpthread libubox libubus libubus-lua libuci libuclient libxtables logd lua mtd netifd openvpn-mbedtls openwrt-keyring opkg procd rpcd swconfig uboot-envtools ubox ubus ubusd uci uclient-fetch uhttpd usign luci-base luci-mod-admin-full luci-theme-bootstrap luci-app-firewall luci-app-openvpn -rpcd-mod-rrdns -luci-app-statistics -ppp -ppp-mod-pppoe -kmod-ppp -kmod-pppoe -kmod-ath9k -wpad-mini -hostapd-common -libiwinfo -libiwinfo-lua -luci-proto-ipv6 -odhcpd-ipv6only -kmod-nf-conntrack6 -libip6tc"
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Upload firmware directory
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: OpenWrt_18.06_firmware
+        path: openwrt/bin/targets/ar71xx/generic/
     - name: Check space usage
       if: (!cancelled())
       run: df -hT
